@@ -1,83 +1,107 @@
-import iziToast from "izitoast";
-import "izitoast/dist/css/iziToast.min.css";
 
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
 
-import { fetchImages } from './js/pixabay-api';
-import { getGallery } from './js/render-functions.js';
+import { fetchGallery } from './js/pixabay-api';
+import { galleryEl, imageTemplate } from './js/render-functions';
 
-import './css/styles.css';
+const formEl = document.querySelector('.img-search-form');
+const loaderEl = document.querySelector('.loader');
+const btnLoadMore = document.querySelector('.load-more-btn');
 
-const searchForm = document.querySelector('.search-form');
-const input = document.querySelector('.search-form__input');
-const gallery = document.querySelector('.gallery');
-const loader = document.querySelector('.preloader');
+let query;
+let page;
+let maxPage;
 
+formEl.addEventListener('submit', onFormSubmit);
+btnLoadMore.addEventListener('click', onLoadMoreClick);
 
-searchForm.addEventListener('submit', handlerSearch);
-
-
-//loader
-
-function showLoader() {
-    loader.classList.remove('is-hidden');
-}
-
-function hideLoader() {
-    loader.classList.add('is-hidden');
-}
-
-
-function handlerSearch(event) {
-    event.preventDefault();
-  gallery.innerHTML = '';
+async function onFormSubmit(e) {
+  e.preventDefault();
+  hideLoadBtn();
+  galleryEl.innerHTML = '';
+  query = e.target.elements.query.value.trim();
+  page = 1;
   
-  showLoader(); //loader
-    
-    loader.classList.remove('is-hidden');
 
-    const inputSearchValue = input.value.trim();
 
-    if (inputSearchValue === '') {
-        errorMessage(`Please fill out the input field!`);
-        searchForm.reset();
-
-        loader.classList.add('is-hidden');
-
-        return;            
+  if (query === '') {
+    showError('Sorry, there are no search terms entered. Please try again!');
+    return;
+  }
+  showLoaderEl();
+  try {
+    const data = await fetchGallery(query, page);
+    maxPage = Math.ceil(data.totalHits / 15);
+    if (data.totalHits === 0) {
+      hideLoaderEl();
+      showError(
+        'Sorry, there are no images matching your search query. Please try again!'
+      );
+      return;
     }
+    imageTemplate(data);
+  } catch (err) {
+    showError(err);
+  }
 
-    fetchImages(inputSearchValue)
-        .then(data => {            
-            if (data.hits.length === 0) {
-                errorMessage(`Sorry, there are no images matching your search query. Please try again!`);
-                return;
-            }
-            getGallery(gallery, data.hits);            
-        })
-        .catch(error => console.log(error))
-        .finally(() => {
-
-            loader.classList.add('is-hidden');
-            hideLoader();
-            searchForm.reset(); 
-        });
+  hideLoaderEl();
+  checkBtnVisibleStatus();
+  e.target.reset();
 }
 
-const iziToastParam = {
-  title: '',    
-  position: 'topRight',
-  backgroundColor: '#ef4040',
-  messageColor: '#fff',
-  titleColor: '#fff',
-  timeout: 3000,
-  pauseOnHover: false, 
-};
+async function onLoadMoreClick() {
+  page += 1;
+  showLoaderEl();
 
-function errorMessage(message) {
-  iziToast.error({
-    ...iziToastParam,
-    message: `${message}`,
+  try {
+    const data = await fetchGallery(query, page);
+    imageTemplate(data);
+  } catch (err) {
+    showError(err);
+  }
+
+  hideLoaderEl();
+  checkBtnVisibleStatus();
+
+  const height = galleryEl.firstElementChild.getBoundingClientRect().height;
+
+  scrollBy({
+    behavior: 'smooth',
+    top: height * 2,
   });
+}
+
+function showLoadBtn() {
+  btnLoadMore.classList.remove('hidden');
+}
+
+function hideLoadBtn() {
+  btnLoadMore.classList.add('hidden');
+}
+
+function showLoaderEl() {
+  loaderEl.classList.remove('hidden');
+}
+
+function hideLoaderEl() {
+  loaderEl.classList.add('hidden');
+}
+
+function showError(msg) {
+  iziToast.error({
+    message: msg,
+    messageColor: 'white',
+    backgroundColor: 'red',
+    position: 'topRight',
+  });
+}
+
+function checkBtnVisibleStatus() {
+  if (page >= maxPage) {
+    hideLoadBtn();
+    showError("We're sorry, but you've reached the end of search results.");
+  } else {
+    showLoadBtn();
+  }
 }

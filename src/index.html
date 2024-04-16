@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
   <meta charset="UTF-8" />
@@ -12,34 +12,25 @@
 </head>
 
 <body>
-  <form class="search-form" id="search-form">
+  <form class="img-search-form">
     <a href="https://pixabay.com/" target="_blank">
       <img class="search-form__logo" src="./img/pixabay-logo.png" alt="logo" width="200" />
     </a>
-    <input class="search-form__input" type="text" name="searchQuery" autocomplete="off"
-      placeholder="Search images..." />
-    <button class="search-form__button" type="submit">
-      <img class="img-search" src="./img/search.png" alt="search" width="20" />Search
+    <input  class="img-search-input"  type="search" name="query" placeholder="Search images..." />
+    <button class="img-search-btn" type="submit">
+      <img class="img-search" src="./img/search.png" alt="search" width="20" />SEARCH
     </button>
   </form>
 
-<div class="loader-wrapper">
-  <div class="loader"></div>
-</div>
+  <ul class="gallery"></ul>
 
-  <div class="gallery">
-    
+  <div class="loader-container">
+    <span class="loader hidden"></span>
   </div>
 
+  <button type="button" class="load-more-btn hidden" hidden>Load more</button>
 
-  <div class="preloader is-hidden">
-    <div class="loader"></div>
-  </div>
-
-
-  <script src="./main.js" type="module"></script>
-  <script src="./js/pixabay-api.js" type="module"></script>
-  <script src="./js/render-functions.js" type="module"></script>
+  <script type="module" src="./main.js"></script>
 </body>
 
 </html>
